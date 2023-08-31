@@ -88,7 +88,7 @@ const PostWidget = ({
           </FlexBetween>
         </FlexBetween>
 
-        <IconButton>
+        <IconButton onClick={()=> console.log("jsnjsn")}>
           <ShareOutlined />
         </IconButton>
       </FlexBetween>
