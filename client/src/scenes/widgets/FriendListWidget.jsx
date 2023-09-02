@@ -8,20 +8,29 @@ import { setFriends } from "state";
 const FriendListWidget = ({ userId }) => {
   const dispatch = useDispatch();
   const { palette } = useTheme();
+  const { id } = useSelector((state) => state.user)
   const token = useSelector((state) => state.token);
   const friends = useSelector((state) => state.user.friends);
 
   const getFriends = async () => {
-    const response = await fetch(
-      `http://localhost:3001/users/${userId}/friends`,
-      {
+    try {
+      const response = await fetch(`http://localhost:3001/users/${id}/friends`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Request failed with status: ${response.status}`);
       }
-    );
-    const data = await response.json();
-    dispatch(setFriends({ friends: data }));
+  
+      const data = await response.json();
+      dispatch(setFriends({ friends: data }));
+    } catch (error) {
+      console.error("Error fetching friends:", error.message);
+      // Handle the error gracefully, e.g., display an error message to the user.
+    }
   };
+  
 
   useEffect(() => {
     getFriends();
@@ -40,8 +49,8 @@ const FriendListWidget = ({ userId }) => {
       <Box display="flex" flexDirection="column" gap="1.5rem">
         {Array.from(friends).map((friend) => (
           <Friend
-            key={friend._id}
-            friendId={friend._id}
+            key={friend.id}
+            friendId={friend.id}
             name={`${friend.firstName} ${friend.lastName}`}
             subtitle={friend.occupation}
             userPicturePath={friend.picturePath}

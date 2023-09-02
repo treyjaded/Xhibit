@@ -13,29 +13,30 @@ import { useDispatch, useSelector } from "react-redux";
 import { setPost } from "state";
 
 const PostWidget = ({
-  postId,
+  id,
   postUserId,
   name,
   description,
   location,
   picturePath,
   userPicturePath,
-  likes,
-  comments,
+  likes , //CHANGE THESE WHEN NECESSARY
+  comments ,
 }) => {
   const [isComments, setIsComments] = useState(false);
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
-  const loggedInUserId = useSelector((state) => state.user._id);
+  const posts = useSelector((state) => state.posts);
+  const loggedInUserId = useSelector((state) => state.user.id);
   const isLiked = Boolean(likes[loggedInUserId]);
   const likeCount = Object.keys(likes).length;
-
+console.log(posts.id)
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
 
   const patchLike = async () => {
-    const response = await fetch(`http://localhost:3001/posts/${postId}/like`, {
+    const response = await fetch(`http://localhost:3001/posts/${posts[0].id}/like`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -88,7 +89,7 @@ const PostWidget = ({
           </FlexBetween>
         </FlexBetween>
 
-        <IconButton onClick={()=> console.log("jsnjsn")}>
+        <IconButton>
           <ShareOutlined />
         </IconButton>
       </FlexBetween>

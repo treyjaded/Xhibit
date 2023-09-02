@@ -17,12 +17,13 @@ const UserWidget = ({ userId, picturePath }) => {
   const { palette } = useTheme();
   const navigate = useNavigate();
   const token = useSelector((state) => state.token);
+  const { id } = useSelector((state) => state.user);
   const dark = palette.neutral.dark;
   const medium = palette.neutral.medium;
   const main = palette.neutral.main;
 
   const getUser = async () => {
-    const response = await fetch(`http://localhost:3001/users/${userId}`, {
+    const response = await fetch(`http://localhost:3001/users/${id}`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -30,7 +31,7 @@ const UserWidget = ({ userId, picturePath }) => {
     setUser(data);
   };
 
-  useEffect(() => {
+  useEffect(() => { 
     getUser();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -54,7 +55,7 @@ const UserWidget = ({ userId, picturePath }) => {
       <FlexBetween
         gap="0.5rem"
         pb="1.1rem"
-        onClick={() => navigate(`/profile/${userId}`)}
+        onClick={() => navigate(`/profile/${id}`)}
       >
         <FlexBetween gap="1rem">
           <UserImage image={picturePath} />

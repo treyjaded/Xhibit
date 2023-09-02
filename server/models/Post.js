@@ -1,35 +1,34 @@
-import mongoose from "mongoose";
+const knex = require('../knex');
+const { Model } = require('objection');
 
-const postSchema = mongoose.Schema(
-  {
-    userId: {
-      type: String,
-      required: true,
-    },
-    firstName: {
-      type: String,
-      required: true,
-    },
-    lastName: {
-      type: String,
-      required: true,
-    },
-    location: String,
-    description: String,
-    picturePath: String,
-    userPicturePath: String,
-    likes: {
-      type: Map,
-      of: Boolean,
-    },
-    comments: {
-      type: Array,
-      default: [],
-    },
-  },
-  { timestamps: true }
-);
+class Post extends Model {
+  static get tableName() {
+    return 'posts';
+  }
 
-const Post = mongoose.model("Post", postSchema);
+  static get jsonSchema() {
+    return {
+      type: 'object',
+      required: ['userId', 'firstName', 'lastName'],
+      properties: {
+        id: { type: 'integer' },
+        userId: { type: 'string' },
+        firstName: { type: 'string' },
+        lastName: { type: 'string' },
+        location: { type: 'string' },
+        description: { type: 'string' },
+        picturePath: { type: 'string' },
+        userPicturePath: { type: 'string' },
+        likes: { type: 'jsonb' }, // Assuming JSONB column type for likes
+        comments: { type: 'jsonb' }, // Assuming JSONB column type for comments
+        // You can define more properties here
+      },
+    };
+  }
 
-export default Post;
+  static get relationMappings() {
+    // Define your relations here if needed
+  }
+}
+
+module.exports = Post;
