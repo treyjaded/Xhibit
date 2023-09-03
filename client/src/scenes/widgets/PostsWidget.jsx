@@ -14,6 +14,7 @@ const PostsWidget = ({ userId, isProfile = false }) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await response.json();
+    data.reverse() // Reverse post data so posts are shown in chronological order.
     dispatch(setPosts({ posts: data }));
   };
 
@@ -25,8 +26,8 @@ const PostsWidget = ({ userId, isProfile = false }) => {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    console.log(response);
     const data = await response.json();
+    data.reverse()
     dispatch(setPosts({ posts: data }));
   };
 
@@ -40,9 +41,9 @@ const PostsWidget = ({ userId, isProfile = false }) => {
 
   return (
     <>
-      {Array.from(posts).map(
+      {posts.map(
         ({
-          id,
+          _id,
           userId,
           firstName,
           lastName,
@@ -54,8 +55,8 @@ const PostsWidget = ({ userId, isProfile = false }) => {
           comments,
         }) => (
           <PostWidget
-            key={id}
-            postId={id}
+            key={_id}
+            postId={_id}
             postUserId={userId}
             name={`${firstName} ${lastName}`}
             description={description}
@@ -64,6 +65,7 @@ const PostsWidget = ({ userId, isProfile = false }) => {
             userPicturePath={userPicturePath}
             likes={likes}
             comments={comments}
+            getPosts={getPosts} // A prop in our post widget So now it can use the function.
           />
         )
       )}
