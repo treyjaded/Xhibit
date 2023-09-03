@@ -25,6 +25,30 @@ export const createPost = async (req, res) => {
     res.status(409).json({ message: err.message });
   }
 };
+/* DELETE */
+export const deletePost = async (req, res) => {
+  try {
+    const { id } = req.params; // Assuming id is passed as a route parameter
+    const post = await Post.findById(id);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if the user has the permission to delete this post
+    // This can depend on your application's logic and authentication/authorization system
+
+    // Delete the post
+    await post.remove();
+
+    // Optionally, you can return a success message or updated list of posts
+    const updatedPosts = await Post.find();
+    res.status(200).json(updatedPosts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 
 /* READ */
 export const getFeedPosts = async (req, res) => {
