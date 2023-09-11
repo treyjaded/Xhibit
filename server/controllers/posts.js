@@ -96,16 +96,31 @@ export const likePost = async (req, res) => {
   }
 };
 /* DELETE */
-export const deletePost = async (req, res)=>{
+export const deletePost = async (req, res) => {
   try {
-    const {id} = req.params;
-    const {loggedInUserId, postUserId} = req.body;
-    // console.log(">>>>>",loggedInUserId, postUserId)
-    if(loggedInUserId !== postUserId) return res.status(401).json({message:"unauthorized action"});
+    const { id } = req.params;
+    const { loggedInUserId, postUserId } = req.body;
+    // Check if the user has the permission to delete this post
+    // This can depend on your application's logic and authentication/authorization system    
+    if (loggedInUserId !== postUserId) return res.status(401).json({ message: "unauthorized action" });
     const deleted = await Post.findByIdAndDelete(id);
     const posts = await Post.find();
     res.status(200).json(posts)
   } catch (err) {
-    res.status(404).json({message:err.message})
+    res.status(404).json({ message: err.message })
+  }
+}  
+/* ADD COMMENTS */
+export const commentPost = async (req, res) => {
+  try {
+    const { id } = req.params
+    const { userId, commentText } = req.body;
+    const post = await Post.findById(id);
+    post.comments.push({ userId, commentText })
+
+    const updatePost = await Post.findByIdAndUpdate(id, { comments: post.comments }, { new: true });
+    res.status(200).json(updatePost);
+  } catch (err) {
+    res.status(404).json({ message: err.message })
   }
 }

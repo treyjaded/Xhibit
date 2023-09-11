@@ -17,6 +17,7 @@ import {
   IconButton,
   useMediaQuery,
 } from "@mui/material";
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import FlexBetween from "components/FlexBetween";
 import Dropzone from "react-dropzone";
 import UserImage from "components/UserImage";
@@ -52,7 +53,7 @@ const MyPostWidget = ({ picturePath }) => {
       body: formData,
     });
     const posts = await response.json();
-    posts.reverse()
+    posts.reverse() // When a user posts, the post will show first, instead of when the page is reloaded.
     dispatch(setPosts({ posts }));
     setImage(null);
     setPost("");

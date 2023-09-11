@@ -2,9 +2,11 @@ import {
   ChatBubbleOutlineOutlined,
   FavoriteBorderOutlined,
   FavoriteOutlined,
+  Search,
   ShareOutlined,
 } from "@mui/icons-material";
-import { Box, Divider, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, Divider, IconButton, InputBase, Typography, useTheme } from "@mui/material";
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import FlexBetween from "components/FlexBetween";
 import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
@@ -28,8 +30,10 @@ const PostWidget = ({
 
 }) => {
   const [isComments, setIsComments] = useState(false);
+  const [commentValue, setCommentValue] = useState('')
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
+  const users = useSelector((state) => state.users);
   const loggedInUserId = useSelector((state) => state.user._id);
   const isLiked = Boolean(likes[loggedInUserId]);
   const likeCount = Object.keys(likes).length;
@@ -37,6 +41,8 @@ const PostWidget = ({
   const { palette } = useTheme();
   const main = palette.neutral.main;
   const primary = palette.primary.main;
+  const medium = palette.neutral.medium;
+
 
   const patchLike = async () => {
     const response = await fetch(`http://localhost:3001/posts/${postId}/like`, {
@@ -51,6 +57,27 @@ const PostWidget = ({
     dispatch(setPost({ post: updatedPost }));
   };
 
+  const AddComment = async()=>{
+    const response = await fetch(`http://localhost:3001/posts/${postId}/comment`, {
+      method:"PATCH",
+      headers:{
+        Authorization:`Bearer ${token}`,
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({userId:loggedInUserId, commentText:commentValue})
+    })
+    const updatedPost = await response.json();
+    console.log("comm",updatedPost)
+    dispatch(setPost({post:updatedPost}))
+    setCommentValue('')
+  }
+
+  const handleOnOpenComment = () => {
+    setIsComments(!isComments)
+
+  }
+
+
   const handleDeletePost = async (postId)=>{
     await fetch(`http://localhost:3001/posts/${postId}/delete-post`, {
       method: "PATCH",
@@ -61,7 +88,7 @@ const PostWidget = ({
       body: JSON.stringify({ loggedInUserId, postUserId })
     })
 
-    getPosts();
+    getPosts(); //Updates the the feed with posts 
   }
 
   return (
@@ -98,7 +125,7 @@ const PostWidget = ({
           </FlexBetween>
 
           <FlexBetween gap="0.3rem">
-            <IconButton onClick={() => setIsComments(!isComments)}>
+            <IconButton onClick={() => handleOnOpenComment()}>
               <ChatBubbleOutlineOutlined />
             </IconButton>
             <Typography>{comments.length}</Typography>
@@ -122,11 +149,26 @@ const PostWidget = ({
       </FlexBetween>
       {isComments  && (
         <Box mt="0.5rem">
+           <FlexBetween
+            // backgroundColor={neutralLight}
+            borderRadius="9px"
+            gap="3rem"
+            padding="0.1rem 1.5rem"
+          >
+            <InputBase value={commentValue} onChange={(e) => setCommentValue(e.target.value)} placeholder="Write your comment..." />
+            <IconButton disabled={!commentValue} onClick={AddComment}>
+              <SendRoundedIcon />
+            </IconButton>
+          </FlexBetween>
+          
           {comments.map((comment, i) => (
             <Box key={`${name}-${i}`}>
               <Divider />
-              <Typography sx={{ color: main, m: "0.5rem 0", pl: "1rem" }}>
-                {comment}
+              <Typography sx={{ color: main, m: "0.5rem 0", pl: "1rem", wordBreak:'break-word' }}>
+                <Typography color={medium}>{
+                users.find(user => user._id === comment.userId)?.firstName +" "+
+                users.find(user => user._id === comment.userId)?.lastName
+                }</Typography><Typography color={main}>{comment.commentText}</Typography>
               </Typography>
             </Box>
           ))}
