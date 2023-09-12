@@ -2,11 +2,11 @@ import {
   ChatBubbleOutlineOutlined,
   FavoriteBorderOutlined,
   FavoriteOutlined,
-  Search,
   ShareOutlined,
 } from "@mui/icons-material";
 import { Box, Divider, IconButton, InputBase, Typography, useTheme } from "@mui/material";
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import FlexBetween from "components/FlexBetween";
 import Friend from "components/Friend";
 import WidgetWrapper from "components/WidgetWrapper";
@@ -31,9 +31,11 @@ const PostWidget = ({
 }) => {
   const [isComments, setIsComments] = useState(false);
   const [commentValue, setCommentValue] = useState('')
+  const [seeMore, setSeeMore] = useState(false)
   const dispatch = useDispatch();
   const token = useSelector((state) => state.token);
-  const users = useSelector((state) => state.users);
+  const users = useSelector((state) => state.user);
+  // const firstname = useSelector((state) => state.user.firstName);
   const loggedInUserId = useSelector((state) => state.user._id);
   const isLiked = Boolean(likes[loggedInUserId]);
   const likeCount = Object.keys(likes).length;
@@ -43,6 +45,12 @@ const PostWidget = ({
   const primary = palette.primary.main;
   const medium = palette.neutral.medium;
 
+  const usersArray = Object.values(users)
+  console.log("user", users)
+  // userArray.forEach(([key, value]) => {
+  //   console.log(key); //
+  //   console.log(value); //
+  // });
 
   const patchLike = async () => {
     const response = await fetch(`http://localhost:3001/posts/${postId}/like`, {
@@ -57,18 +65,17 @@ const PostWidget = ({
     dispatch(setPost({ post: updatedPost }));
   };
 
-  const AddComment = async()=>{
+  const AddComment = async () => {
     const response = await fetch(`http://localhost:3001/posts/${postId}/comment`, {
-      method:"PATCH",
-      headers:{
-        Authorization:`Bearer ${token}`,
-        "Content-Type":"application/json"
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify({userId:loggedInUserId, commentText:commentValue})
+      body: JSON.stringify({ userId: loggedInUserId, commentText: commentValue })
     })
     const updatedPost = await response.json();
-    console.log("comm",updatedPost)
-    dispatch(setPost({post:updatedPost}))
+    dispatch(setPost({ post: updatedPost }))
     setCommentValue('')
   }
 
@@ -76,9 +83,21 @@ const PostWidget = ({
     setIsComments(!isComments)
 
   }
+  const handleCommentDelete = async (postId, commentId) => {
+    const response = await fetch(`http://localhost:3001/posts/${postId}/delete-comment`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ loggedInUserId, commentId })
+    })
+    const updatedPost = await response.json();
+    dispatch(setPost({ post: updatedPost }))
+  }
 
 
-  const handleDeletePost = async (postId)=>{
+  const handleDeletePost = async (postId) => {
     await fetch(`http://localhost:3001/posts/${postId}/delete-post`, {
       method: "PATCH",
       headers: {
@@ -88,7 +107,7 @@ const PostWidget = ({
       body: JSON.stringify({ loggedInUserId, postUserId })
     })
 
-    getPosts(); //Updates the the feed with posts 
+    getPosts(); // Updates the the feed with posts 
   }
 
   return (
@@ -132,24 +151,25 @@ const PostWidget = ({
           </FlexBetween>
         </FlexBetween>
 
-      <FlexBetween gap='0.3rem'>
-          {loggedInUserId===postUserId?
-          <>
-          {/* <IconButton onClick={()=> handleDeletePost()}>
+        <FlexBetween gap='0.3rem'>
+          {loggedInUserId === postUserId ?
+            <>
+              {/* <IconButton onClick={()=> handleDeletePost()}>
             <DeleteRoundedIcon />
           </IconButton> */}
-          <ThreeDotsDropDown clickActions={{handleDeletePost}} postId={postId} />
-          <IconButton>
-            <ShareOutlined />
-          </IconButton> </>:
-          <IconButton>
-          <ShareOutlined />
-        </IconButton>}
+              <ThreeDotsDropDown clickActions={{ handleDeletePost }} postId={postId} />
+              <DeleteRoundedIcon />
+              <IconButton>
+                <ShareOutlined />
+              </IconButton> </> :
+            <IconButton>
+              <ShareOutlined />
+            </IconButton>}
         </FlexBetween>
       </FlexBetween>
-      {isComments  && (
+      {isComments && (
         <Box mt="0.5rem">
-           <FlexBetween
+          <FlexBetween
             // backgroundColor={neutralLight}
             borderRadius="9px"
             gap="3rem"
@@ -160,16 +180,44 @@ const PostWidget = ({
               <SendRoundedIcon />
             </IconButton>
           </FlexBetween>
-          
+
           {comments.map((comment, i) => (
             <Box key={`${name}-${i}`}>
               <Divider />
-              <Typography sx={{ color: main, m: "0.5rem 0", pl: "1rem", wordBreak:'break-word' }}>
-                <Typography color={medium}>{
-                users.find(user => user._id === comment.userId)?.firstName +" "+
-                users.find(user => user._id === comment.userId)?.lastName
-                }</Typography><Typography color={main}>{comment.commentText}</Typography>
-              </Typography>
+              <FlexBetween>
+                <Typography sx={{ color: main, m: "0.5rem 0", pl: "1rem", wordBreak: 'break-word' }}>
+                  <FlexBetween gap={2}>
+
+                    <Typography color={medium} fontSize="14px" fontStyle="italic">
+                      {(() => {
+                        const userIdIndex = usersArray.indexOf(comment.userId);
+                        if (userIdIndex !== -1) {
+                          const firstName = usersArray[userIdIndex + 1];
+                          const lastName = usersArray[userIdIndex + 2];
+                          return `${firstName} ${lastName}`;
+                        } else {
+                          return 'User not found';
+                        }
+                      })()}
+                    </Typography>
+                    <Typography color={medium} fontSize={10}>{ }</Typography>
+                  </FlexBetween>
+
+                  <Typography color={main}>{
+                    comment.commentText.length < 150 ? comment.commentText :
+                      <>{seeMore ? comment.commentText : comment.commentText.slice(0, 100) + "..."} <span
+                        style={{ color: 'blue', textDecoration: "underline", cursor: 'pointer' }}
+                        onClick={() => setSeeMore(!seeMore)}> {!seeMore ? ">See more" : "<See less"} </span></>
+                  }</Typography>
+                </Typography>
+                <ThreeDotsDropDown
+                  commentId={comment._id}
+                  postId={postId}
+                  commentUserId={comment.userId}
+                  userId={loggedInUserId}
+                  clickActions={{ handleCommentDelete }}
+                />
+              </FlexBetween>
             </Box>
           ))}
           <Divider />

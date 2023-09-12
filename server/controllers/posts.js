@@ -1,5 +1,6 @@
 import Post from "../models/Post.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 /* CREATE */
 export const createPost = async (req, res) => {
@@ -113,14 +114,32 @@ export const deletePost = async (req, res) => {
 /* ADD COMMENTS */
 export const commentPost = async (req, res) => {
   try {
+    const date= new Date()
     const { id } = req.params
     const { userId, commentText } = req.body;
     const post = await Post.findById(id);
-    post.comments.push({ userId, commentText })
+    post.comments.push({ _id: new mongoose.Types.ObjectId(), userId, commentText, createdAt:date.getTime() })
 
     const updatePost = await Post.findByIdAndUpdate(id, { comments: post.comments }, { new: true });
     res.status(200).json(updatePost);
   } catch (err) {
     res.status(404).json({ message: err.message })
+  }
+}
+/* DELETE COMMENTS */
+export const deleteComment = async (req, res)=>{
+  try {
+    const {id} = req.params;
+    const {loggedInUserId, commentId} = req.body;
+    const post = await Post.findById(id)
+    post.comments = post.comments.filter(comment => {
+      return comment._id.toString() !== commentId
+    });
+
+    const updatePost = await Post.findByIdAndUpdate(id, {comments:post.comments}, {new:true})
+    res.status(200).json(updatePost);
+
+  } catch (err) {
+    res.status(404).json({message:err.message})
   }
 }
